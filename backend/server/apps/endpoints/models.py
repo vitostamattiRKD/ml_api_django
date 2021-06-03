@@ -36,7 +36,7 @@ class MLAlgorithm(models.Model):
     version = models.CharField(max_length=128)
     owner = models.CharField(max_length=128) 
     created_at= models.DateTimeField(auto_now_add=True, blank=True)
-    parend_endpoint = models.ForeignKey(Endpoint, on_delete=models.CASCADE)
+    parent_endpoint = models.ForeignKey(Endpoint, on_delete=models.CASCADE)
 
 
 class MLAlgorithmStatus(models.Model):
