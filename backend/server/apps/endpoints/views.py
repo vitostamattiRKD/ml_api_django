@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework import mixins
+from django.db import transaction
 
 from apps.endpoints.models import Endpoint
 from apps.endpoints.serializers import EndpointSerializer
@@ -17,6 +18,7 @@ import json
 from numpy.random import rand
 from rest_framework import views, status
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 from apps.ml_models.registry import MLRegistry
 from server.wsgi import registry
 
@@ -36,16 +38,18 @@ class MLAlgorithmViewSet(
 
 
 def deactivate_other_statuses(instance):
-    old_statuses = MLAlgorithmStatus.objects.filter(parent_mlalgorithm = instance.parent_mlalgorithm,
-                                                        created_at__lt=instance.created_at,
-                                                        active=True)
+    old_statuses = MLAlgorithmStatus.objects.filter(
+        parent_mlalgorithm = instance.parent_mlalgorithm,
+        created_at__lt=instance.created_at,
+        active=True
+        )
     for i in range(len(old_statuses)):
         old_statuses[i].active = False
     MLAlgorithmStatus.objects.bulk_update(old_statuses, ["active"])
 
 class MLAlgorithmStatusViewSet(
-    mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet,
-    mixins.CreateModelMixin
+    mixins.RetrieveModelMixin, mixins.ListModelMixin,
+    viewsets.GenericViewSet, mixins.CreateModelMixin
 ):
     serializer_class = MLAlgorithmStatusSerializer
     queryset = MLAlgorithmStatus.objects.all()
@@ -55,15 +59,12 @@ class MLAlgorithmStatusViewSet(
                 instance = serializer.save(active=True)
                 # set active=False for other statuses
                 deactivate_other_statuses(instance)
-
-
-
         except Exception as e:
             raise APIException(str(e))
 
 class MLRequestViewSet(
-    mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet,
-    mixins.UpdateModelMixin
+    mixins.RetrieveModelMixin, mixins.ListModelMixin,
+    viewsets.GenericViewSet, mixins.UpdateModelMixin
 ):
     serializer_class = MLRequestSerializer
     queryset = MLRequest.objects.all()
@@ -73,25 +74,19 @@ class PredictView(views.APIView):
     def post(self, request, endpoint_name, format=None):
 
         algorithm_status = self.request.query_params.get('status','production')
-        algorithm_version = self.request.query_params.get("version")
-
-        # algs = MLAlgorithm.objects.filter(
-        #     parent_endpoint__name = endpoint_name,
-        #     status__status = algorithm_status,
-        #     status__active = True,     
-        # )
+        algorithm_version = self.request.query_params.get('version')
 
         algs = MLAlgorithm.objects.filter(
             parent_endpoint__name = endpoint_name,
-            mlalgorithmstatus__status = algorithm_status,
-            mlalgorithmstatus__active = True,     
+            status__status = algorithm_status,
+            status__active = True,     
         )
-        print(algs)
-
-        if len(algs) is not None:
+        
+        
+        if algorithm_version is not None:
             algs = algs.filter(version = algorithm_version)
             
-        print(algs)
+
         if len(algs) == 0:
             return Response(
                 {"status": "Error", "message": "ML algorithm is not available"},
@@ -112,9 +107,7 @@ class PredictView(views.APIView):
         prediction = algorithm_object.compute_prediction(request.data)       
 
         label = prediction["label"] if "label" in prediction else "error"
-        
-        print(prediction)
-        print(label)
+
         ml_request = MLRequest(
             input_data=json.dumps(request.data),
             full_response=prediction,
@@ -123,7 +116,7 @@ class PredictView(views.APIView):
             parent_mlalgorithm=algs[alg_index],
         )
         ml_request.save()
-        print(ml_request)
+
         prediction["request_id"] = ml_request.id
 
         return Response(prediction)

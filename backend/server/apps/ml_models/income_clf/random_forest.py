@@ -1,12 +1,13 @@
 import joblib
 import pandas as pd
 
+
 class RandomForestClassifier:
     def __init__(self):
-        path_to_notebooks = "../../notebooks/"
-        self.values_fill_missing = joblib.load(path_to_notebooks + 'train_mode.joblib')
-        self.encoders = joblib.load(path_to_notebooks + 'encoders.joblib')
-        self.model = joblib.load(path_to_notebooks + 'random_forest.joblib')
+        path_to_artifacts = "../../notebooks/"
+        self.values_fill_missing = joblib.load(path_to_artifacts + 'train_mode.joblib')
+        self.encoders = joblib.load(path_to_artifacts + 'encoders.joblib')
+        self.model = joblib.load(path_to_artifacts + 'random_forest.joblib')
 
     def preprocessing(self, input_data):
         # JSON to pandas
@@ -48,9 +49,9 @@ class RandomForestClassifier:
     def compute_prediction(self, input_data):
         try:
             input_data = self.preprocessing(input_data)
-            print("preproceced")
+
             prediction = self.predict(input_data)[0]
-            print("predicted")
+
             prediction = self.postprocessing(prediction)
         except Exception as e:
             return {

@@ -4,12 +4,12 @@ from django.db import models
 
 class Endpoint(models.Model):
     """
-    Endpoint object represents an ML API endpoing.
+    Endpoint object represents an ML API endpoint.
     
     Attrs:
-    name: The name of the endpoint that will be used in de API
-    owner: The owner name
-    created_at: The date when de endpoint was created
+    name: The name of the endpoint that will be used in de API,
+    owner: The owner name,
+    created_at: The date when the endpoint was created,
     """
     name = models.CharField(max_length=128)
     owner = models.CharField(max_length=128)
@@ -55,7 +55,11 @@ class MLAlgorithmStatus(models.Model):
     active = models.BooleanField()
     created_by = models.CharField(max_length=128)
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
-    parent_mlalgorithm = models.ForeignKey(MLAlgorithm, on_delete=models.CASCADE)
+    parent_mlalgorithm = models.ForeignKey(
+        MLAlgorithm,
+        on_delete=models.CASCADE,
+        related_name='status'
+    )
 
 
 class MLRequest(models.Model):

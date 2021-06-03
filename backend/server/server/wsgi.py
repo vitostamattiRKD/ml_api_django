@@ -1,4 +1,5 @@
 """
+Web Server Gateway Interface
 WSGI config for server project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
@@ -8,11 +9,8 @@ https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/
 """
 
 import os
-
 from django.core.wsgi import get_wsgi_application
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
-
 application = get_wsgi_application()
 
 # ML registry 
@@ -36,5 +34,14 @@ try:
         algorithm_description="Random Forest with simple pre- and post-processing",
         algorithm_code=inspect.getsource(RandomForestClassifier)
     )
+    
 except Exception as e:
     print("Exception while loading the algorithms to the registry,", str(e))
+
+
+# try:
+    # registry = MLRegistry()
+    # registry.remove_algorithm(id=4)
+# except Exception as e:
+    # print("Exception while removing the algorithms to the registry,", str(e))
+   

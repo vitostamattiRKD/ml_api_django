@@ -1,4 +1,3 @@
-# file backend/server/apps/ml/registry.py
 from apps.endpoints.models import Endpoint
 from apps.endpoints.models import MLAlgorithm
 from apps.endpoints.models import MLAlgorithmStatus
@@ -7,7 +6,12 @@ class MLRegistry:
     def __init__(self):
         self.endpoints = {}
     
-    def add_algorithm(self, endpoint_name, algorithm_object, algorithm_name, algorithm_status, algorithm_version, owner, algorithm_description, algorithm_code):
+    def add_algorithm(
+        self, endpoint_name,
+        algorithm_object, algorithm_name,
+        algorithm_status, algorithm_version,
+        owner, algorithm_description, 
+        algorithm_code):
 
         # Get endpoint
         endpoint, _ = Endpoint.objects.get_or_create(
@@ -15,6 +19,7 @@ class MLRegistry:
             owner=owner,    
         )
 
+        # get algorithm
         database_object, algorithm_created = MLAlgorithm.objects.get_or_create(
             name=algorithm_name,
             description=algorithm_description,
@@ -32,5 +37,10 @@ class MLRegistry:
                 active=True
             )
             status.save()
-
+            
+        # add to registry
         self.endpoints[database_object.id] = algorithm_object
+
+    def remove_algorithm(self, id):
+        algorithm_to_remove = MLAlgorithm.objects.filter(id=id).delete()
+        

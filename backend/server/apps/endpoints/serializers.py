@@ -12,7 +12,7 @@ class EndpointSerializer(serializers.ModelSerializer):
 
 class MLAlgorithmSerializer(serializers.ModelSerializer):
     
-    current_status =serializers.SerializerMethodField(read_only=True)
+    current_status = serializers.SerializerMethodField(read_only=True)
 
     def get_current_status(self, mlalgorithm):
         result = MLAlgorithmStatus.objects.filter(parent_mlalgorithm=mlalgorithm).latest('created_at').status
@@ -48,6 +48,7 @@ class MLRequestSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'input_data',
+            'full_response',
             'response',
             'feedback',
             'created_at',
